@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  # Наш основний додаток (Node.js)
+  app:
+    build:
+      context: .
+    ports:
+      - "3000:3000"
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=secret
+      - MYSQL_DB=todos
+    # Додаток чекає, поки база даних стане "здоровою"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # Сервіс бази даних (MySQL)
+  mysql:
+    image: mysql:8.0
+    volumes:
+      - todo-mysql-data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=secret
+      - MYSQL_DATABASE=todos
+    # Перевірка працездатності бази даних
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+# Сховище для збереження даних поза контейнером
+volumes:
+  todo-mysql-data:
