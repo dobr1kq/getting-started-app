@@ -1,0 +1,18 @@
+# Stage 1: Builder
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+# Копіюємо весь код (включаючи папку src), щоб він був доступний для копіювання далі
+COPY . . 
+RUN npm install
+
+# Stage 2: Runner
+FROM node:20-alpine
+WORKDIR /app
+# Копіюємо лише те, що потрібно для роботи
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/src ./src
+
+EXPOSE 3000
+CMD ["node", "src/index.js"]
